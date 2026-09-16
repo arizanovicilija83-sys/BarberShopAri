@@ -30,7 +30,15 @@ section{padding:75px 0;border-top:1px solid #222}.title{font-size:40px}.grid{dis
 <p class="lead" style="font-size:16px;margin-top:-5px">Pogledaj neke od frizura urađenih u BarberShopAri.</p>
 <div id="galleryGrid" class="gallery-grid"></div></div></section>
 <div id="galleryModal" class="gallery-modal" aria-hidden="true"><button class="gallery-close" id="galleryClose" aria-label="Zatvori">×</button><img id="galleryModalImg" src="" alt="BarberShopAri rad"></div>
-
+<section id="about">
+  <div class="wrap">
+    <div class="tag">O MENI</div>
+    <h2 class="title">O meni</h2>
+    <div id="aboutContent" class="panel">
+      Učitavanje...
+    </div>
+  </div>
+</section>
 <section id="booking"><div class="wrap"><div class="tag">ONLINE ZAKAZIVANJE</div><h2 class="title">ZAKAŽI TERMIN</h2><div class="booking">
 <div class="panel"><label>Usluga</label><select id="service"><option>Učitavanje...</option></select>
 <label>Datum</label><input id="date" type="date"><div id="availability"></div><p class="muted">Zakazivanje je dostupno za narednih 30 dana.</p></div>
@@ -117,4 +125,27 @@ document.querySelector('#galleryModal').addEventListener('click',e=>{if(e.target
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('#galleryModal').classList.remove('open')});
 
 loadServices();
+ async function loadAboutMe(){
+  try{
+    const {data,error}=await db
+      .from('about_me')
+      .select('title,content')
+      .eq('id',1)
+      .single();
+
+    if(error) throw error;
+
+    const el=document.querySelector('#aboutContent');
+
+    if(el){
+      el.innerHTML=
+        `<h3>${escapeHtml(data.title)}</h3>
+         <p style="white-space:pre-line;margin-top:12px;">${escapeHtml(data.content)}</p>`;
+    }
+  }catch(e){
+    console.error('Greška pri učitavanju O meni:',e);
+  }
+}
+
+loadAboutMe();
 </script></body></html>
