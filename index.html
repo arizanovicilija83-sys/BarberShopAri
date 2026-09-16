@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarberShopAri</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#fff;font:16px Arial,sans-serif}a{color:inherit;text-decoration:none}.wrap{width:min(1050px,92%);margin:auto}
+nav{height:72px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between}.logo{font-weight:900;font-size:22px}.logo span{color:#777}
+.hero{padding:100px 0 90px;background:radial-gradient(circle at 75% 35%,#292929,transparent 45%)}.tag{color:#999;text-transform:uppercase;letter-spacing:4px;font-size:12px}
+h1{font-size:clamp(52px,9vw,96px);line-height:.9;letter-spacing:-4px;margin:15px 0}.lead{color:#aaa;max-width:550px;font-size:18px;line-height:1.6}.btn{border:0;background:#fff;color:#000;padding:15px 22px;border-radius:5px;font-weight:800;cursor:pointer;display:inline-block}
+section{padding:75px 0;border-top:1px solid #222}.title{font-size:40px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card,.panel{border:1px solid #292929;background:#111;padding:24px;border-radius:7px}.price{font-size:27px;font-weight:900}
+.booking{display:grid;grid-template-columns:1fr 1fr;gap:20px}label{display:block;color:#999;font-size:13px;margin:15px 0 7px}input,select{width:100%;padding:14px;background:#080808;color:#fff;border:1px solid #333;border-radius:5px}
+.slots{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:10px}.slot{padding:12px;background:#181818;color:#fff;border:1px solid #444;border-radius:5px;cursor:pointer}.slot:hover{border-color:#fff}.slot.active{background:#fff;color:#000}.slot:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}.closed{padding:18px;text-align:center;border:1px solid #522;background:#211010;color:#ffb0b0;border-radius:5px;margin-top:15px}.success{padding:18px;text-align:center;border:1px solid #444;background:#151515;border-radius:5px;margin-top:15px}.muted{color:#888}.error{color:#ff9c9c}.notice{margin-top:12px;color:#aaa;line-height:1.5}
+@media(max-width:700px){.grid,.booking{grid-template-columns:1fr}h1{letter-spacing:-2px}.hero{padding:70px 0}.title{font-size:34px}}
+
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:25px}
+.gallery-item{position:relative;overflow:hidden;border:1px solid #292929;border-radius:7px;background:#111;aspect-ratio:4/5;cursor:pointer}
+.gallery-item img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .35s ease}
+.gallery-item:hover img{transform:scale(1.04)}
+.gallery-empty{padding:25px;border:1px solid #292929;background:#111;border-radius:7px;color:#888}
+.gallery-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.gallery-modal.open{display:flex}
+.gallery-modal img{max-width:95vw;max-height:90vh;object-fit:contain;border-radius:6px}
+.gallery-close{position:absolute;top:18px;right:22px;background:#fff;color:#000;border:0;border-radius:50%;width:42px;height:42px;font-size:25px;cursor:pointer}
+@media(max-width:700px){.gallery-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+</style></head><body>
+<nav><div class="wrap"><div class="logo">BarberShop<span>Ari</span></div><a href="#gallery" style="margin-left:auto;margin-right:18px;color:#aaa">GALERIJA</a></div><a href="#booking" class="btn" style="margin-right:4%">ZAKAŽI</a></nav>
+<header class="hero"><div class="wrap"><div class="tag">BarberShopAri</div><h1>OŠTAR<br>IZGLED.</h1><p class="lead">Profesionalno šišanje i brijanje. Izaberi uslugu, datum i slobodan termin.</p><a class="btn" href="#booking">ZAKAŽI TERMIN →</a></div></header>
+<section><div class="wrap"><div class="tag">CENOVNIK</div><h2 class="title">USLUGE</h2><div class="grid" id="servicesGrid"></div></div></section>
+
+<section id="gallery"><div class="wrap"><div class="tag">RADOVI</div><h2 class="title">GALERIJA</h2>
+<p class="lead" style="font-size:16px;margin-top:-5px">Pogledaj neke od frizura urađenih u BarberShopAri.</p>
+<div id="galleryGrid" class="gallery-grid"></div></div></section>
+<div id="galleryModal" class="gallery-modal" aria-hidden="true"><button class="gallery-close" id="galleryClose" aria-label="Zatvori">×</button><img id="galleryModalImg" src="" alt="BarberShopAri rad"></div>
+
+<section id="booking"><div class="wrap"><div class="tag">ONLINE ZAKAZIVANJE</div><h2 class="title">ZAKAŽI TERMIN</h2><div class="booking">
+<div class="panel"><label>Usluga</label><select id="service"><option>Učitavanje...</option></select>
+<label>Datum</label><input id="date" type="date"><div id="availability"></div><p class="muted">Zakazivanje je dostupno za narednih 30 dana.</p></div>
+<div class="panel"><label>Ime i prezime</label><input id="name" autocomplete="name"><label>Telefon</label><input id="phone" type="tel" autocomplete="tel"><label>Termin</label><input id="chosen" readonly placeholder="Izaberi termin"><br><br><button id="bookBtn" class="btn" style="width:100%">POTVRDI TERMIN</button><p id="result" class="muted"></p></div>
+</div></div></section>
+<footer style="padding:30px;text-align:center;color:#777">© 2026 BarberShopAri</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="./config.js"></script>
+<script>
+const db=supabase.createClient(BARBER_CONFIG.SUPABASE_URL,BARBER_CONFIG.SUPABASE_PUBLISHABLE_KEY);
+const dateEl=document.querySelector('#date'),avail=document.querySelector('#availability'),chosen=document.querySelector('#chosen'),serviceEl=document.querySelector('#service'),result=document.querySelector('#result'),bookBtn=document.querySelector('#bookBtn');
+const dayNames=['Nedelja','Ponedeljak','Utorak','Sreda','Četvrtak','Petak','Subota'];
+const fallback={1:['17:30','18:30','19:30','20:30','21:30'],2:['17:30','18:30','19:30','20:30','21:30'],3:['17:30','18:30','19:30','20:30','21:30'],4:['09:30','10:30','11:30','12:30'],5:['09:30','10:30','11:30','12:30'],6:['15:30','16:30','17:30','18:30','19:30'],0:[]};
+let services=[];
+const today=new Date();today.setHours(0,0,0,0);const max=new Date(today);max.setDate(max.getDate()+30);
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+dateEl.min=iso(today);dateEl.max=iso(max);
+async function loadServices(){
+ const {data,error}=await db.from('services').select('id,name,price').eq('active',true).order('name');
+ if(error){serviceEl.innerHTML='<option>Greška pri učitavanju</option>';return;}
+ services=data||[];serviceEl.innerHTML=services.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} — ${s.price} RSD</option>`).join('');
+ document.querySelector('#servicesGrid').innerHTML=services.map(s=>`<div class="card"><h3>${escapeHtml(s.name)}</h3><p class="price">${s.price} RSD</p></div>`).join('');
+}
+function escapeHtml(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+async function renderSlots(){
+ avail.innerHTML='';chosen.value='';result.textContent='';result.className='muted';if(!dateEl.value)return;
+ const d=new Date(dateEl.value+'T12:00:00'),day=d.getDay();
+ if(day===0){avail.innerHTML='<div class="closed">NEDELJA — SLOBODAN DAN</div>';return;}
+ const [{data:schedule},{data:blockedDay},{data:blockedSlots},{data:booked,error}]=await Promise.all([
+  db.from('weekly_schedule').select('start_time').eq('day_of_week',day).eq('active',true).order('start_time'),
+  db.from('blocked_days').select('blocked_date').eq('blocked_date',dateEl.value).maybeSingle(),
+  db.from('blocked_slots').select('start_time').eq('blocked_date',dateEl.value),
+  db.rpc('get_booked_slots',{selected_date:dateEl.value})
+ ]);
+ if(error){avail.innerHTML='<p class="error">Ne mogu da učitam termine. Pokušaj ponovo.</p>';return;}
+ if(blockedDay){avail.innerHTML='<div class="closed">OVAJ DAN JE SLOBODAN / BLOKIRAN</div>';return;}
+ const times=(schedule&&schedule.length?schedule.map(x=>x.start_time.slice(0,5)):fallback[day]);
+ const busy=new Set((booked||[]).map(x=>x.start_time.slice(0,5)));const blocked=new Set((blockedSlots||[]).map(x=>x.start_time.slice(0,5)));
+ if(!times.length){avail.innerHTML=`<div class="closed">${dayNames[day]} — NEMA TERMINA</div>`;return;}
+ const box=document.createElement('div');box.className='slots';
+ times.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='slot';b.textContent=busy.has(t)?`${t} — ZAUZETO`:blocked.has(t)?`${t} — BLOKIRANO`:t;b.disabled=busy.has(t)||blocked.has(t);if(!b.disabled)b.onclick=()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));b.classList.add('active');chosen.value=t};box.append(b);});
+ avail.innerHTML='<label>Termini</label>';avail.append(box);
+}
+dateEl.addEventListener('change',renderSlots);
+bookBtn.addEventListener('click',async()=>{
+ const n=document.querySelector('#name').value.trim(),p=document.querySelector('#phone').value.trim(),service_id=serviceEl.value;
+ if(!n||!p||!dateEl.value||!chosen.value||!service_id){result.textContent='Popuni podatke i izaberi termin.';result.className='error';return;}
+ bookBtn.disabled=true;bookBtn.textContent='ČUVANJE...';
+ const {error}=await db.from('appointments').insert({client_name:n,client_phone:p,service_id,appointment_date:dateEl.value,start_time:chosen.value,status:'booked'});
+ if(error){result.textContent=error.message.includes('duplicate')?'Taj termin je upravo zauzet. Izaberi drugi.':error.message;result.className='error';await renderSlots();}
+ else {result.textContent='Termin je uspešno zakazan!';result.className='success';chosen.value='';document.querySelector('#name').value='';document.querySelector('#phone').value='';await renderSlots();}
+ bookBtn.disabled=false;bookBtn.textContent='POTVRDI TERMIN';
+});
+
+const localGallery=[
+  {url:'./gallery/gallery-1.jpg',title:'Rad 1'},
+  {url:'./gallery/gallery-2.jpg',title:'Rad 2'},
+  {url:'./gallery/gallery-3.jpg',title:'Rad 3'},
+  {url:'./gallery/gallery-4.jpg',title:'Rad 4'},
+  {url:'./gallery/gallery-5.jpg',title:'Rad 5'},
+  {url:'./gallery/gallery-6.jpg',title:'Rad 6'}
+];
+async function loadGallery(){
+  const grid=document.querySelector('#galleryGrid');
+  let dbImages=[];
+  try{
+    const {data,error}=await db.from('gallery').select('id,image_url,title,sort_order').order('sort_order').order('created_at');
+    if(!error) dbImages=data||[];
+  }catch(e){}
+  const items=[
+    ...localGallery.map((x,i)=>({url:x.url,title:x.title,sort_order:i})),
+    ...dbImages.map(x=>({url:x.image_url,title:x.title||'BarberShopAri rad',sort_order:1000+(x.sort_order||0)}))
+  ];
+  if(!items.length){grid.innerHTML='<div class="gallery-empty">Galerija trenutno nema fotografija.</div>';return;}
+  grid.innerHTML=items.map((x,i)=>`<div class="gallery-item" data-gallery-url="${escapeHtml(x.url)}" data-gallery-title="${escapeHtml(x.title)}"><img src="${escapeHtml(x.url)}" alt="${escapeHtml(x.title)}" loading="lazy"></div>`).join('');
+  grid.querySelectorAll('.gallery-item').forEach(el=>el.addEventListener('click',()=>{
+    document.querySelector('#galleryModalImg').src=el.dataset.galleryUrl;
+    document.querySelector('#galleryModalImg').alt=el.dataset.galleryTitle;
+    document.querySelector('#galleryModal').classList.add('open');
+  }));
+}
+document.querySelector('#galleryClose').onclick=()=>document.querySelector('#galleryModal').classList.remove('open');
+document.querySelector('#galleryModal').addEventListener('click',e=>{if(e.target.id==='galleryModal')e.currentTarget.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('#galleryModal').classList.remove('open')});
+
+loadServices();
+</script></body></html>
